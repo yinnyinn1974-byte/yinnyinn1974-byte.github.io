@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnglishPlay — 互動英語學習</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1929;
+    --card: #22203a;
+    --border: rgba(255,255,255,0.08);
+    --text: #fffffe;
+    --muted: #a7a9be;
+    --accent1: #ff8906;
+    --accent2: #3da9fc;
+    --accent3: #ef4565;
+    --accent4: #6fcf97;
+    --accent5: #bb86fc;
+    --beginner: #6fcf97;
+    --intermediate: #3da9fc;
+    --advanced: #ef4565;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(61,169,252,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(187,134,252,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 60% 80%, rgba(255,137,6,0.06) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+  .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+  header { text-align: center; padding: 2.5rem 0 1.5rem; }
+  .logo { font-family: 'Fredoka One', cursive; font-size: 3rem; background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent5)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
+  .tagline { color: var(--muted); font-size: 1rem; margin-top: 0.25rem; font-weight: 600; }
+  .section-title { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--muted); margin-bottom: 1rem; letter-spacing: 0.5px; }
+
+  .level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .level-card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+  .level-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.25s; border-radius: 18px; }
+  .level-card.beginner::before { background: radial-gradient(circle at 50% 0%, rgba(111,207,151,0.15), transparent 70%); }
+  .level-card.intermediate::before { background: radial-gradient(circle at 50% 0%, rgba(61,169,252,0.15), transparent 70%); }
+  .level-card.advanced::before { background: radial-gradient(circle at 50% 0%, rgba(239,69,101,0.15), transparent 70%); }
+  .level-card:hover::before, .level-card.active::before { opacity: 1; }
+  .level-card:hover { transform: translateY(-4px); }
+  .level-card.active { border-color: var(--level-color); box-shadow: 0 0 24px var(--level-glow); }
+  .level-card.beginner { --level-color: var(--beginner); --level-glow: rgba(111,207,151,0.3); }
+  .level-card.intermediate { --level-color: var(--intermediate); --level-glow: rgba(61,169,252,0.3); }
+  .level-card.advanced { --level-color: var(--advanced); --level-glow: rgba(239,69,101,0.3); }
+  .level-icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+  .level-name { font-family: 'Fredoka One', cursive; font-size: 1.3rem; margin-bottom: 0.2rem; }
+  .level-card.beginner .level-name { color: var(--beginner); }
+  .level-card.intermediate .level-name { color: var(--intermediate); }
+  .level-card.advanced .level-name { color: var(--advanced); }
+  .level-desc { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+
+  .game-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .game-tab { background: var(--card); border: 1.5px solid var(--border); border-radius: 50px; padding: 0.5rem 1.1rem; font-size: 0.85rem; font-weight: 700; font-family: 'Nunito', sans-serif; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .game-tab:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .game-tab.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+  .game-area { background: var(--card); border: 1.5px solid var(--border); border-radius: 24px; padding: 2rem; min-height: 380px; }
+
+  .score-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .score-pill { background: var(--surface); border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; }
+  .score-val { color: var(--accent1); font-size: 1.1rem; }
+  .progress-bar { flex: 1; height: 8px; background: var(--surface); border-radius: 4px; margin: 0 1rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent5)); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+
+  /* ===== SPEAK BUTTON ===== */
+  .speak-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1.5px solid rgba(61,169,252,0.35);
+    background: rgba(61,169,252,0.1); color: var(--accent2);
+    cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+    padding: 0; line-height: 1; font-size: 13px;
+    width: 30px; height: 30px;
+  }
+  .speak-btn:hover { background: rgba(61,169,252,0.25); border-color: var(--accent2); transform: scale(1.15); }
+  .speak-btn:active { transform: scale(0.92); }
+  .speak-btn.speaking { background: rgba(255,137,6,0.2); border-color: var(--accent1); color: var(--accent1); animation: speakPulse 0.55s ease infinite alternate; }
+  .speak-btn.sm { width: 24px; height: 24px; font-size: 11px; }
+  .speak-btn.lg { width: 40px; height: 40px; font-size: 17px; border-radius: 12px; }
+  @keyframes speakPulse { from { box-shadow: 0 0 0 0 rgba(255,137,6,0.5); } to { box-shadow: 0 0 0 7px rgba(255,137,6,0); } }
+
+  .tts-notice {
+    background: rgba(61,169,252,0.07); border: 1px solid rgba(61,169,252,0.18);
+    border-radius: 12px; padding: 0.55rem 1rem; font-size: 0.82rem; font-weight: 700;
+    color: var(--accent2); margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .question-label { font-size: 0.85rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.6rem; }
+  .question-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.4rem; }
+  .question-text { font-size: 1.3rem; font-weight: 800; line-height: 1.4; color: var(--text); flex: 1; }
+  .question-text em { color: var(--accent1); font-style: normal; border-bottom: 2px dashed var(--accent1); }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .option-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 14px; padding: 0.85rem 1rem; font-size: 0.95rem; font-weight: 700; font-family: 'Nunito', sans-serif; color: var(--text); cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 0.6rem; }
+  .opt-letter { width: 28px; height: 28px; border-radius: 8px; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800; flex-shrink: 0; transition: all 0.2s; }
+  .opt-text { flex: 1; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent2); transform: translateY(-2px); }
+  .option-btn:hover:not(:disabled) .opt-letter { background: var(--accent2); color: white; }
+  .option-btn.correct { border-color: var(--accent4); background: rgba(111,207,151,0.1); }
+  .option-btn.correct .opt-letter { background: var(--accent4); color: #fff; }
+  .option-btn.wrong { border-color: var(--accent3); background: rgba(239,69,101,0.1); }
+  .option-btn.wrong .opt-letter { background: var(--accent3); color: #fff; }
+
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .match-col { display: flex; flex-direction: column; gap: 0.6rem; }
+  .match-col-title { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem; }
+  .match-item { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 0.65rem 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+  .match-item-label { flex: 1; }
+  .match-item:hover { border-color: var(--accent5); transform: translateX(3px); }
+  .match-item.selected { border-color: var(--accent2); background: rgba(61,169,252,0.1); color: var(--accent2); }
+  .match-item.matched { border-color: var(--accent4); background: rgba(111,207,151,0.1); color: var(--accent4); cursor: default; opacity: 0.7; }
+  .match-item.wrong-flash { border-color: var(--accent3); background: rgba(239,69,101,0.1); animation: shake 0.3s ease; }
+
+  .scramble-display { text-align: center; margin: 0.5rem 0 0.75rem; }
+  .scramble-word-row { display: flex; align-items: center; justify-content: center; gap: 0.7rem; }
+  .scramble-word-label { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--accent5); }
+  .hint-text { text-align: center; color: var(--muted); font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; }
+  .scramble-letters { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .letter-tile { width: 48px; height: 54px; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; cursor: pointer; transition: all 0.2s; font-family: 'Fredoka One', cursive; color: var(--accent1); }
+  .letter-tile:hover { border-color: var(--accent1); transform: translateY(-4px); }
+  .letter-tile.used { opacity: 0.25; cursor: default; transform: none; }
+  .answer-slots { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .answer-slot { width: 48px; height: 54px; background: transparent; border: 2px dashed var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; font-family: 'Fredoka One', cursive; color: var(--text); cursor: pointer; transition: all 0.2s; }
+  .answer-slot.filled { border-style: solid; border-color: var(--accent2); background: rgba(61,169,252,0.08); }
+  .answer-slot.correct-slot { border-color: var(--accent4); background: rgba(111,207,151,0.1); color: var(--accent4); }
+  .answer-slot.wrong-slot { border-color: var(--accent3); background: rgba(239,69,101,0.1); animation: shake 0.3s ease; }
+
+  .sentence-row { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0 1.5rem; flex-wrap: wrap; }
+  .sentence-display { font-size: 1.3rem; font-weight: 700; line-height: 1.8; text-align: center; }
+  .blank-input { display: inline-block; border: none; border-bottom: 3px solid var(--accent1); background: transparent; color: var(--accent1); font-size: 1.3rem; font-weight: 800; font-family: 'Nunito', sans-serif; width: 120px; text-align: center; outline: none; padding: 0 0.25rem; transition: border-color 0.2s; }
+  .blank-input:focus { border-color: var(--accent2); color: var(--accent2); }
+  .blank-input.correct { border-color: var(--accent4); color: var(--accent4); }
+  .blank-input.wrong { border-color: var(--accent3); color: var(--accent3); animation: shake 0.3s ease; }
+
+  .word-bank { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .word-chip { background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 0.35rem 0.7rem; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--accent5); display: flex; align-items: center; gap: 0.4rem; }
+  .word-chip:hover { border-color: var(--accent5); transform: translateY(-2px); }
+  .word-chip.used { opacity: 0.3; cursor: default; transform: none; }
+
+  .vocab-card { background: var(--surface); border-radius: 16px; padding: 1.2rem 1.5rem; margin-bottom: 0.75rem; border: 1.5px solid var(--border); transition: all 0.2s; }
+  .vocab-card:hover { border-color: rgba(255,255,255,0.15); }
+  .vocab-top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .vocab-word { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--accent2); }
+  .vocab-ipa { font-size: 0.82rem; color: var(--accent5); font-weight: 600; background: rgba(187,134,252,0.1); border: 1px solid rgba(187,134,252,0.2); border-radius: 6px; padding: 0.1rem 0.55rem; font-style: italic; }
+  .vocab-meaning { font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; }
+  .vocab-example-row { display: flex; align-items: center; gap: 0.5rem; }
+  .vocab-example { font-size: 0.82rem; color: var(--muted); font-style: italic; flex: 1; }
+
+  .btn { background: transparent; border: 2px solid var(--accent2); border-radius: 12px; padding: 0.65rem 1.5rem; font-size: 0.95rem; font-weight: 800; font-family: 'Nunito', sans-serif; color: var(--accent2); cursor: pointer; transition: all 0.2s; }
+  .btn:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+  .btn.primary { background: var(--accent2); color: #fff; }
+  .btn.primary:hover { opacity: 0.9; }
+  .btn-row { display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; }
+
+  .feedback-banner { text-align: center; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 800; font-size: 1rem; margin: 1rem 0; display: none; }
+  .feedback-banner.show { display: block; animation: popIn 0.3s ease; }
+  .feedback-banner.correct { background: rgba(111,207,151,0.15); color: var(--accent4); border: 1.5px solid var(--accent4); }
+  .feedback-banner.wrong { background: rgba(239,69,101,0.15); color: var(--accent3); border: 1.5px solid var(--accent3); }
+
+  .result-screen { text-align: center; padding: 2rem 0; display: none; }
+  .result-screen.show { display: block; animation: popIn 0.4s ease; }
+  .result-emoji { font-size: 4rem; margin-bottom: 0.5rem; }
+  .result-title { font-family: 'Fredoka One', cursive; font-size: 2rem; margin-bottom: 0.5rem; }
+  .result-score { font-size: 3.5rem; font-weight: 800; color: var(--accent1); margin-bottom: 0.5rem; }
+  .result-msg { color: var(--muted); font-weight: 600; margin-bottom: 1.5rem; }
+
+  .encourage-chips { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0 1.5rem; }
+  .encourage-chip { background: var(--surface); border: 1.5px solid var(--border); border-radius: 50px; padding: 0.35rem 0.8rem; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; color: var(--muted); }
+
+  @keyframes popIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .floating { animation: float 3s ease-in-out infinite; }
+
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+  .confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+  @media (max-width: 600px) {
+    .level-grid { grid-template-columns: 1fr; }
+    .options-grid { grid-template-columns: 1fr; }
+    .match-grid { grid-template-columns: 1fr; }
+    .logo { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo floating">🎓 EnglishPlay</div>
+    <div class="tagline">互動遊戲 × 每日挑戰 × 升級打怪</div>
+  </header>
+
+  <div class="section-title">選擇難度等級</div>
+  <div class="level-grid">
+    <div class="level-card beginner active" onclick="selectLevel('beginner',this)">
+      <div class="level-icon">🌱</div><div class="level-name">初級</div><div class="level-desc">Beginner · A1–A2</div>
+    </div>
+    <div class="level-card intermediate" onclick="selectLevel('intermediate',this)">
+      <div class="level-icon">🚀</div><div class="level-name">中級</div><div class="level-desc">Intermediate · B1–B2</div>
+    </div>
+    <div class="level-card advanced" onclick="selectLevel('advanced',this)">
+      <div class="level-icon">🔥</div><div class="level-name">高級</div><div class="level-desc">Advanced · C1–C2</div>
+    </div>
+  </div>
+
+  <div class="section-title">選擇遊戲</div>
+  <div class="game-tabs">
+    <button class="game-tab active" onclick="selectGame('quiz',this)">❓ 選擇題</button>
+    <button class="game-tab" onclick="selectGame('match',this)">🔗 配對遊戲</button>
+    <button class="game-tab" onclick="selectGame('scramble',this)">🔀 拼字遊戲</button>
+    <button class="game-tab" onclick="selectGame('fill',this)">✏️ 填空遊戲</button>
+    <button class="game-tab" onclick="selectGame('vocab',this)">📚 單字表</button>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+</div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+/* ============================================================
+   TTS ENGINE — Web Speech API
+   ============================================================ */
+let activeSpeakBtn = null;
+
+function speak(text, btn, rate) {
+  if (!window.speechSynthesis) return;
+  rate = rate || 0.88;
+
+  window.speechSynthesis.cancel();
+
+  // Toggle off same button
+  if (activeSpeakBtn && activeSpeakBtn === btn) {
+    activeSpeakBtn.classList.remove('speaking');
+    activeSpeakBtn = null;
+    return;
+  }
+  if (activeSpeakBtn) { activeSpeakBtn.classList.remove('speaking'); activeSpeakBtn = null; }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang  = 'en-US';
+  utter.rate  = rate;
+  utter.pitch = 1;
+
+  // Prefer an English voice
+  const voices = window.speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith('en-') && /google|samantha|daniel|karen/i.test(v.name))
+               || voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) utter.voice = enVoice;
+
+  if (btn) { btn.classList.add('speaking'); activeSpeakBtn = btn; }
+  utter.onend  = () => { if (btn) btn.classList.remove('speaking'); if (activeSpeakBtn === btn) activeSpeakBtn = null; };
+  utter.onerror= () => { if (btn) btn.classList.remove('speaking'); activeSpeakBtn = null; };
+  window.speechSynthesis.speak(utter);
+}
+
+// shorthand: build a speak-button HTML string
+function sb(text, cls, rate) {
+  cls  = cls  || '';
+  rate = rate || 0.88;
+  // Escape for inline onclick
+  const esc = text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return `<button class="speak-btn ${cls}" onclick="event.stopPropagation();speak('${esc}',this,${rate})" title="播放發音 · Listen">🔊</button>`;
+}
+
+function ttsBanner() {
+  return `<div class="tts-notice">🔊 點擊任意 <strong style="margin:0 2px">🔊</strong> 按鈕即可聆聽英語發音 · Click any 🔊 to hear pronunciation</div>`;
+}
+
+/* ============================================================
+   CONTENT DATA
+   ============================================================ */
+const DATA = {
+  beginner: {
+    vocab: [
+      { word:'Apple',  ipa:'/ˈæp.əl/',    meaning:'蘋果',   example:'I eat an apple every day.' },
+      { word:'Happy',  ipa:'/ˈhæp.i/',    meaning:'快樂的',  example:'She is very happy today.' },
+      { word:'Run',    ipa:'/rʌn/',        meaning:'跑步',   example:'The dog can run fast.' },
+      { word:'Book',   ipa:'/bʊk/',        meaning:'書',     example:'I read a book at night.' },
+      { word:'Friend', ipa:'/frend/',      meaning:'朋友',   example:'He is my best friend.' },
+      { word:'Water',  ipa:'/ˈwɔː.tər/',  meaning:'水',     example:'Please drink more water.' },
+    ],
+    quiz: [
+      { q:'What is the meaning of "Beautiful"?',      qSpeak:'What is the meaning of Beautiful?',         opts:['醜陋的','美麗的','生氣的','害怕的'],                                                 oSpeak:['Ugly','Beautiful','Angry','Afraid'],                                             ans:1 },
+      { q:'Which word means "吃"?',                   qSpeak:'Which word means to eat?',                  opts:['Sleep','Run','Eat','Jump'],                                                         oSpeak:['Sleep','Run','Eat','Jump'],                                                     ans:2 },
+      { q:'"Big" is the opposite of ___?',            qSpeak:'Big is the opposite of blank?',             opts:['Fast','Small','Green','Old'],                                                       oSpeak:['Fast','Small','Green','Old'],                                                   ans:1 },
+      { q:'Choose the correct sentence:',             qSpeak:'Choose the correct sentence.',              opts:['He am happy.','She are sad.','I is cold.','They are kind.'],                        oSpeak:['He am happy.','She are sad.','I is cold.','They are kind.'],                    ans:3 },
+      { q:'"Dog" 的中文意思是？',                       qSpeak:'What is the Chinese meaning of dog?',       opts:['貓','狗','鳥','魚'],                                                               oSpeak:['Cat','Dog','Bird','Fish'],                                                       ans:1 },
+    ],
+    match: { pairs:[ {en:'Cat',zh:'貓'},{en:'House',zh:'房子'},{en:'School',zh:'學校'},{en:'Food',zh:'食物'},{en:'Sun',zh:'太陽'} ] },
+    scramble:[
+      { word:'APPLE',  hint:'A red or green fruit 🍎' },
+      { word:'HAPPY',  hint:'Feeling joy or pleasure 😊' },
+      { word:'WATER',  hint:'The liquid we drink every day 💧' },
+      { word:'BOOK',   hint:'You read this 📖' },
+      { word:'FRIEND', hint:'Someone you like to be with 🤝' },
+    ],
+    fill:[
+      { sentence:'I ___ a student.',                ans:'am',   bank:['am','is','are','be'] },
+      { sentence:'She ___ an apple every morning.', ans:'eats', bank:['eat','eats','eating','eaten'] },
+      { sentence:'They ___ to school by bus.',      ans:'go',   bank:['go','goes','went','going'] },
+      { sentence:'The cat ___ on the table.',       ans:'sits', bank:['sit','sits','sitting','sat'] },
+    ],
+  },
+  intermediate: {
+    vocab:[
+      { word:'Ambitious',   ipa:'/æmˈbɪʃ.əs/',     meaning:'有抱負的',    example:'She is an ambitious young lawyer.' },
+      { word:'Convince',    ipa:'/kənˈvɪns/',       meaning:'說服',        example:'He tried to convince her to join the team.' },
+      { word:'Demonstrate', ipa:'/ˈdem.ən.streɪt/', meaning:'示範、展示',   example:'Please demonstrate how to use this tool.' },
+      { word:'Efficient',   ipa:'/ɪˈfɪʃ.ənt/',     meaning:'有效率的',    example:'An efficient worker saves time and energy.' },
+      { word:'Negotiate',   ipa:'/nɪˈɡəʊ.ʃi.eɪt/',meaning:'談判、協商',   example:'They negotiated a new contract.' },
+      { word:'Persevere',   ipa:'/ˌpɜː.sɪˈvɪər/',  meaning:'堅持不懈',    example:'You must persevere even when it gets hard.' },
+    ],
+    quiz:[
+      { q:'Choose the correct form: "She ___ working here since 2020."',  qSpeak:'Choose the correct form. She blank working here since 2020.',    opts:['is','was','has been','had been'],                                                                                                    oSpeak:['is','was','has been','had been'],                                           ans:2 },
+      { q:'"Despite the rain, they ___ the match." Best word?',           qSpeak:'Despite the rain, they blank the match. Choose the best word.',  opts:['won','win','winning','have won'],                                                                                                    oSpeak:['won','win','winning','have won'],                                           ans:0 },
+      { q:'What does "ambiguous" mean?',                                  qSpeak:'What does ambiguous mean?',                                      opts:['Very clear','Having two clear meanings','Completely wrong','Extremely happy'],                                                        oSpeak:['Very clear','Having two clear meanings','Completely wrong','Extremely happy'], ans:1 },
+      { q:'Which sentence uses the passive voice correctly?',             qSpeak:'Which sentence uses the passive voice correctly?',               opts:['The chef cooked dinner.','Dinner was cooked by the chef.','Dinner cooking was chef.','Chef was dinner cooked.'],                    oSpeak:['The chef cooked dinner.','Dinner was cooked by the chef.','Dinner cooking was chef.','Chef was dinner cooked.'], ans:1 },
+      { q:'"Procrastinate" means to ___?',                               qSpeak:'Procrastinate means to blank?',                                  opts:['Work very hard','Delay or postpone tasks','Celebrate success','Study efficiently'],                                                  oSpeak:['Work very hard','Delay or postpone tasks','Celebrate success','Study efficiently'], ans:1 },
+    ],
+    match:{ pairs:[ {en:'Eloquent',zh:'口才好的'},{en:'Frugal',zh:'節儉的'},{en:'Diligent',zh:'勤奮的'},{en:'Vivid',zh:'生動的'},{en:'Candid',zh:'坦率的'} ] },
+    scramble:[
+      { word:'JOURNEY',  hint:'A trip or travel from one place to another ✈️' },
+      { word:'CULTURE',  hint:'The arts, customs and beliefs of a society 🎭' },
+      { word:'FREEDOM',  hint:'The state of not being restricted or controlled 🕊️' },
+      { word:'BALANCE',  hint:'A state of stability and equality ⚖️' },
+      { word:'PASSION',  hint:'A strong feeling or enthusiasm for something ❤️‍🔥' },
+    ],
+    fill:[
+      { sentence:'If I ___ you, I would study harder.',                     ans:'were',       bank:['was','were','am','be'] },
+      { sentence:'By the time she arrived, the party ___ already started.', ans:'had',        bank:['has','had','have','having'] },
+      { sentence:'The report needs to be ___ by Friday.',                   ans:'submitted',  bank:['submit','submits','submitted','submitting'] },
+      { sentence:'He spoke so ___ that everyone was moved.',               ans:'eloquently', bank:['eloquent','eloquently','eloquence','eloquenter'] },
+    ],
+  },
+  advanced: {
+    vocab:[
+      { word:'Ephemeral',  ipa:'/ɪˈfem.ər.əl/',    meaning:'短暫的、轉瞬即逝的',  example:'Fame can be ephemeral in the entertainment industry.' },
+      { word:'Juxtapose',  ipa:'/ˈdʒʌk.stə.pəʊz/', meaning:'並列對比',            example:'The artist juxtaposed old and new in her painting.' },
+      { word:'Pragmatic',  ipa:'/præɡˈmæt.ɪk/',    meaning:'務實的',              example:'We need a pragmatic solution, not an idealistic one.' },
+      { word:'Ubiquitous', ipa:'/juːˈbɪk.wɪ.təs/', meaning:'無所不在的',           example:'Smartphones have become ubiquitous in modern life.' },
+      { word:'Verbose',    ipa:'/vɜːˈbəʊs/',        meaning:'冗長的、囉嗦的',       example:'His verbose essay could have been half the length.' },
+      { word:'Paradox',    ipa:'/ˈpær.ə.dɒks/',     meaning:'悖論、矛盾',           example:'The paradox of choice can lead to paralysis.' },
+    ],
+    quiz:[
+      { q:'Choose the most precise synonym for "meticulous":',            qSpeak:'Choose the most precise synonym for meticulous.',                opts:['Careful','Scrupulously attentive to detail','Generally organized','Somewhat accurate'],                                              oSpeak:['Careful','Scrupulously attentive to detail','Generally organized','Somewhat accurate'], ans:1 },
+      { q:'"The committee ___ the proposal before voting."',              qSpeak:'The committee blank the proposal before voting. Best choice?',   opts:['deliberated over','thought about','looked at','considered around'],                                                                 oSpeak:['deliberated over','thought about','looked at','considered around'],         ans:0 },
+      { q:'Which sentence contains a dangling modifier?',                qSpeak:'Which sentence contains a dangling modifier?',                   opts:['Running quickly, she caught the bus.','Having finished the exam, the room was silent.','Exhausted from the hike, he fell asleep.','After eating dinner, she read for an hour.'], oSpeak:['Running quickly, she caught the bus.','Having finished the exam, the room was silent.','Exhausted from the hike, he fell asleep.','After eating dinner, she read for an hour.'], ans:1 },
+      { q:'"Sanguine" most closely means:',                              qSpeak:'Sanguine most closely means?',                                   opts:['Pessimistic','Optimistic','Indifferent','Aggressive'],                                                                               oSpeak:['Pessimistic','Optimistic','Indifferent','Aggressive'],                      ans:1 },
+      { q:'Which best expresses concession?',                            qSpeak:'Which best expresses concession?',                               opts:['Because he tried hard, he succeeded.','Although he tried hard, he failed.','Since he failed, he tried again.','He tried hard; he succeeded.'], oSpeak:['Because he tried hard, he succeeded.','Although he tried hard, he failed.','Since he failed, he tried again.','He tried hard; he succeeded.'], ans:1 },
+    ],
+    match:{ pairs:[ {en:'Laconic',zh:'簡潔的'},{en:'Pedantic',zh:'迂腐的'},{en:'Tenacious',zh:'頑強堅持的'},{en:'Pernicious',zh:'有害的'},{en:'Melancholy',zh:'憂鬱'} ] },
+    scramble:[
+      { word:'ELOQUENCE', hint:'Fluent and persuasive expression in speaking or writing 🎤' },
+      { word:'PARADOX',   hint:'A seemingly contradictory statement that may be true 🤔' },
+      { word:'INTEGRITY', hint:'Honesty and strong moral principles 🤝' },
+      { word:'AMBIGUOUS', hint:'Having more than one possible interpretation 🎭' },
+      { word:'PROFOUND',  hint:'Very deep or having great meaning or significance 🌊' },
+    ],
+    fill:[
+      { sentence:'Were it not for her ___ dedication, the project would have failed.',  ans:'unwavering', bank:['unwavering','wavering','unwave','wavered'] },
+      { sentence:'The proposal, ___ by all stakeholders, was finally ratified.',        ans:'endorsed',   bank:['endorse','endorsed','endorsing','endorsement'] },
+      { sentence:'Notwithstanding the ___ opposition, the bill passed.',               ans:'vehement',   bank:['mild','vehement','slight','subtle'] },
+      { sentence:'His argument, though ___, failed to address the core issue.',        ans:'cogent',     bank:['cogent','weak','vague','confused'] },
+    ],
+  }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+  level:'beginner', game:'quiz',
+  score:0, qIdx:0, answered:false,
+  matchSel:null, matchDone:new Set(), matchScore:0,
+  scrAnswer:[], scrShuffled:[], scrUsed:new Set(),
+};
+
+function selectLevel(level, el) {
+  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); state.level = level; resetGame(); renderGame();
+}
+function selectGame(game, el) {
+  document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active'); state.game = game; resetGame(); renderGame();
+}
+function resetGame() {
+  state.score=0; state.qIdx=0; state.answered=false;
+  state.matchSel=null; state.matchDone=new Set(); state.matchScore=0;
+  state.scrAnswer=[]; state.scrShuffled=[]; state.scrUsed=new Set();
+  window.speechSynthesis.cancel(); activeSpeakBtn=null;
+}
+function renderGame() {
+  const d=DATA[state.level], a=document.getElementById('gameArea');
+  a.innerHTML='';
+  if(state.game==='quiz')     renderQuiz(a,d);
+  else if(state.game==='match')    renderMatch(a,d);
+  else if(state.game==='scramble') renderScramble(a,d);
+  else if(state.game==='fill')     renderFill(a,d);
+  else if(state.game==='vocab')    renderVocab(a,d);
+}
+
+/* ============================================================
+   QUIZ — with speak on question + options
+   ============================================================ */
+function renderQuiz(a, d) {
+  const qs=d.quiz, total=qs.length;
+  if (state.qIdx >= total) { renderResult(a, state.score, total); return; }
+  const q = qs[state.qIdx];
+  const letters = ['A','B','C','D'];
+  const pct = (state.qIdx / total * 100).toFixed(0);
+  a.innerHTML = `
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">🏆 <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${total}</div>
+    </div>
+    <div class="question-label">Question ${state.qIdx+1}</div>
+    <div class="question-row">
+      ${sb(q.qSpeak || q.q, 'lg', 0.82)}
+      <div class="question-text">${q.q}</div>
+    </div>
+    <div class="options-grid">
+      ${q.opts.map((o,i) => `
+        <button class="option-btn" onclick="answerQuiz(${i})" id="opt${i}">
+          <span class="opt-letter">${letters[i]}</span>
+          <span class="opt-text">${o}</span>
+          ${q.oSpeak && q.oSpeak[i] ? sb(q.oSpeak[i],'sm',0.85) : ''}
+        </button>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row" id="nextRow" style="display:none">
+      <button class="btn primary" onclick="nextQuiz()">下一題 →</button>
+    </div>`;
+}
+function answerQuiz(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = DATA[state.level].quiz[state.qIdx];
+  const fb = document.getElementById('fb');
+  document.querySelectorAll('.option-btn').forEach((b,i) => {
+    b.disabled = true;
+    if (i===q.ans) b.classList.add('correct');
+    if (i===idx && i!==q.ans) b.classList.add('wrong');
+  });
+  if (idx === q.ans) {
+    state.score++;
+    fb.textContent = '🎉 正確！Great job!'; fb.className = 'feedback-banner correct show';
+    const spk = q.oSpeak ? q.oSpeak[q.ans] : q.opts[q.ans];
+    if (spk) setTimeout(() => speak(spk, null, 0.82), 350);
+    spawnConfetti(6);
+  } else {
+    const spk = q.oSpeak ? q.oSpeak[q.ans] : q.opts[q.ans];
+    fb.innerHTML = `❌ 答案是：<strong>${q.opts[q.ans]}</strong>`;
+    fb.className = 'feedback-banner wrong show';
+    if (spk) setTimeout(() => speak(spk, null, 0.82), 350);
+  }
+  document.getElementById('nextRow').style.display = 'flex';
+}
+function nextQuiz() { state.qIdx++; state.answered = false; renderQuiz(document.getElementById('gameArea'), DATA[state.level]); }
+
+/* ============================================================
+   MATCH — speak on successful pair
+   ============================================================ */
+function renderMatch(a, d) {
+  const pairs=d.match.pairs, total=pairs.length;
+  if (state.matchDone.size >= total) { renderResult(a, state.matchScore, total); return; }
+  const zh = pairs.map((p,i) => ({t:p.zh, i}));
+  shuffleArr(zh);
+  a.innerHTML = `
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">✅ <span class="score-val">${state.matchScore}</span> / ${total}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.matchDone.size/total*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">配對遊戲</div>
+    </div>
+    <div style="font-size:0.88rem;color:var(--muted);font-weight:600;margin-bottom:1rem;">點英文 → 點中文配對！🔊 可聆聽發音</div>
+    <div class="match-grid">
+      <div class="match-col">
+        <div class="match-col-title">🇬🇧 English</div>
+        ${pairs.map((p,i) => `
+          <div class="match-item${state.matchDone.has(i)?' matched':''}" id="en_${i}" onclick="pickMatch('en',${i})">
+            ${sb(p.en, 'sm', 0.82)}
+            <span class="match-item-label">${p.en}</span>
+          </div>`).join('')}
+      </div>
+      <div class="match-col">
+        <div class="match-col-title">🇹🇼 中文</div>
+        ${zh.map(w => `
+          <div class="match-item${state.matchDone.has(w.i)?' matched':''}" id="zh_${w.i}" onclick="pickMatch('zh',${w.i})">
+            <span class="match-item-label">${w.t}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="feedback-banner" id="fb"></div>`;
+}
+function pickMatch(side, idx) {
+  if (state.matchDone.has(idx)) return;
+  const fb = document.getElementById('fb');
+  if (!state.matchSel) { state.matchSel={side,idx}; document.getElementById(`${side}_${idx}`).classList.add('selected'); return; }
+  const prev = state.matchSel;
+  if (prev.side === side) {
+    document.getElementById(`${prev.side}_${prev.idx}`).classList.remove('selected');
+    state.matchSel = {side,idx}; document.getElementById(`${side}_${idx}`).classList.add('selected'); return;
+  }
+  const enIdx = side==='zh' ? prev.idx : idx;
+  const zhIdx = side==='zh' ? idx : prev.idx;
+  document.getElementById(`en_${prev.idx}`).classList.remove('selected');
+  if (enIdx === zhIdx) {
+    state.matchDone.add(enIdx); state.matchScore++;
+    document.getElementById(`en_${enIdx}`).classList.add('matched');
+    document.getElementById(`zh_${zhIdx}`).classList.add('matched');
+    speak(DATA[state.level].match.pairs[enIdx].en, null, 0.82);
+    fb.textContent='🎉 配對成功！'; fb.className='feedback-banner correct show';
+    if (state.matchDone.size >= DATA[state.level].match.pairs.length)
+      setTimeout(() => { spawnConfetti(20); renderMatch(document.getElementById('gameArea'), DATA[state.level]); }, 700);
+  } else {
+    ['en_'+enIdx,'zh_'+zhIdx].forEach(id => { const el=document.getElementById(id); if(el){el.classList.add('wrong-flash');setTimeout(()=>el.classList.remove('wrong-flash'),400);} });
+    fb.textContent='❌ 再試試看！'; fb.className='feedback-banner wrong show';
+  }
+  state.matchSel = null;
+}
+
+/* ============================================================
+   SCRAMBLE — speak button on word
+   ============================================================ */
+function renderScramble(a, d) {
+  const items = d.scramble;
+  if (state.qIdx >= items.length) { renderResult(a, state.score, items.length); return; }
+  const item = items[state.qIdx];
+  if (!state.scrShuffled.length) {
+    state.scrShuffled = shuffleWord(item.word.split(''));
+    state.scrAnswer = new Array(item.word.length).fill(null);
+    state.scrUsed = new Set();
+  }
+  const wordNice = item.word.charAt(0) + item.word.slice(1).toLowerCase();
+  a.innerHTML = `
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">⭐ <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.qIdx/items.length*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${items.length}</div>
+    </div>
+    <div class="scramble-display">
+      <div class="scramble-word-row">
+        ${sb(wordNice, 'lg', 0.75)}
+        <div class="scramble-word-label">${item.word}</div>
+      </div>
+    </div>
+    <div class="hint-text">💡 ${item.hint}</div>
+    <div class="answer-slots" id="ansSlots">
+      ${state.scrAnswer.map((l,i) => `<div class="answer-slot${l?' filled':''}" id="slot${i}" onclick="remScr(${i})">${l||''}</div>`).join('')}
+    </div>
+    <div class="scramble-letters">
+      ${state.scrShuffled.map((l,i) => `<div class="letter-tile${state.scrUsed.has(i)?' used':''}" onclick="addScr('${l}',${i})">${l}</div>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="clearScr()">🗑️ 清除</button>
+      <button class="btn primary" onclick="checkScr()">✓ 確認答案</button>
+    </div>`;
+}
+function addScr(l, ti) { if(state.scrUsed.has(ti)) return; const e=state.scrAnswer.indexOf(null); if(e===-1) return; state.scrAnswer[e]={l,ti}; state.scrUsed.add(ti); renderScramble(document.getElementById('gameArea'),DATA[state.level]); }
+function remScr(si) { const s=state.scrAnswer[si]; if(!s) return; state.scrUsed.delete(s.ti); state.scrAnswer[si]=null; renderScramble(document.getElementById('gameArea'),DATA[state.level]); }
+function clearScr() { const item=DATA[state.level].scramble[state.qIdx]; state.scrAnswer=new Array(item.word.length).fill(null); state.scrUsed=new Set(); renderScramble(document.getElementById('gameArea'),DATA[state.level]); }
+function checkScr() {
+  const item = DATA[state.level].scramble[state.qIdx];
+  const ans  = state.scrAnswer.map(s=>s?s.l:'').join('');
+  const fb   = document.getElementById('fb');
+  const slots= document.querySelectorAll('.answer-slot');
+  if (ans === item.word) {
+    state.score++;
+    slots.forEach(s => s.classList.add('correct-slot'));
+    fb.textContent='🎉 拼對了！Excellent!'; fb.className='feedback-banner correct show';
+    const wordNice = item.word.charAt(0)+item.word.slice(1).toLowerCase();
+    speak(wordNice, null, 0.75);
+    spawnConfetti(10);
+    setTimeout(() => { state.qIdx++; state.scrShuffled=[]; state.scrAnswer=[]; state.scrUsed=new Set(); renderScramble(document.getElementById('gameArea'),DATA[state.level]); }, 1400);
+  } else {
+    slots.forEach(s => s.classList.add('wrong-slot'));
+    const wordNice = item.word.charAt(0)+item.word.slice(1).toLowerCase();
+    fb.textContent=`❌ 再試試看！答案是：${item.word}`; fb.className='feedback-banner wrong show';
+    setTimeout(() => { slots.forEach(s=>s.classList.remove('wrong-slot')); clearScr(); document.getElementById('fb').className='feedback-banner'; }, 1500);
+  }
+}
+
+/* ============================================================
+   FILL IN BLANK — speak button on sentence + word bank
+   ============================================================ */
+function renderFill(a, d) {
+  const items = d.fill;
+  if (state.qIdx >= items.length) { renderResult(a, state.score, items.length); return; }
+  const item = items[state.qIdx];
+  const fullSentenceSpeak = item.sentence.replace('___', '...');
+  a.innerHTML = `
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">✏️ <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.qIdx/items.length*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${items.length}</div>
+    </div>
+    <div class="question-label">填入正確的單字</div>
+    <div class="sentence-row">
+      ${sb(fullSentenceSpeak, 'lg', 0.8)}
+      <div class="sentence-display">
+        ${item.sentence.replace('___', `<input class="blank-input" id="bi" type="text" placeholder="???" autocomplete="off"/>`)}
+      </div>
+    </div>
+    <div style="font-size:0.85rem;color:var(--muted);font-weight:700;text-align:center;margin-bottom:0.75rem;">點擊單字填入，🔊 聽發音</div>
+    <div class="word-bank">
+      ${item.bank.map(w => `
+        <div class="word-chip" onclick="fillW('${w}')">
+          ${sb(w, 'sm', 0.85)}
+          ${w}
+        </div>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="checkFill()">✓ 確認答案</button>
+    </div>`;
+  document.getElementById('bi').addEventListener('keydown', e => { if (e.key==='Enter') checkFill(); });
+}
+function fillW(w) { const i=document.getElementById('bi'); if(i) i.value=w; }
+function checkFill() {
+  const item = DATA[state.level].fill[state.qIdx];
+  const bi   = document.getElementById('bi');
+  const val  = bi.value.trim().toLowerCase();
+  const fb   = document.getElementById('fb');
+  if (val === item.ans.toLowerCase()) {
+    state.score++; bi.classList.add('correct');
+    fb.textContent='🎉 答對了！Perfect!'; fb.className='feedback-banner correct show';
+    const fullSentence = item.sentence.replace('___', item.ans);
+    speak(fullSentence, null, 0.8);
+    spawnConfetti(8);
+    setTimeout(() => { state.qIdx++; renderFill(document.getElementById('gameArea'), DATA[state.level]); }, 1300);
+  } else {
+    bi.classList.add('wrong');
+    fb.innerHTML = `❌ 答案是：<strong>"${item.ans}"</strong>`; fb.className='feedback-banner wrong show';
+    setTimeout(() => { bi.classList.remove('wrong'); bi.value=''; }, 1000);
+  }
+}
+
+/* ============================================================
+   VOCAB — speak on word + IPA + example sentence
+   ============================================================ */
+function renderVocab(a, d) {
+  const levelName = state.level==='beginner' ? '初級' : state.level==='intermediate' ? '中級' : '高級';
+  a.innerHTML = `
+    ${ttsBanner()}
+    <div style="font-family:'Fredoka One',cursive;font-size:1.3rem;margin-bottom:1.25rem;color:var(--accent2);">
+      📚 ${levelName} 單字表
+    </div>
+    ${d.vocab.map(v => `
+      <div class="vocab-card">
+        <div class="vocab-top">
+          ${sb(v.word, 'lg', 0.72)}
+          <div class="vocab-word">${v.word}</div>
+          <div class="vocab-ipa">${v.ipa}</div>
+        </div>
+        <div>
+          <div class="vocab-meaning">📖 ${v.meaning}</div>
+          <div class="vocab-example-row" style="margin-top:0.4rem">
+            ${sb(v.example, 'sm', 0.8)}
+            <div class="vocab-example">${v.example}</div>
+          </div>
+        </div>
+      </div>`).join('')}
+    <div class="btn-row" style="margin-top:1.5rem">
+      <button class="btn primary" onclick="selectGame('quiz',document.querySelector('.game-tab'))">開始測驗 →</button>
+    </div>`;
+}
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+function renderResult(a, score, total) {
+  const pct = Math.round(score / total * 100);
+  let emoji, msg;
+  if (pct===100) { emoji='🏆'; msg='完美！你是英語達人！'; }
+  else if (pct>=80) { emoji='🌟'; msg='太棒了！繼續加油！'; }
+  else if (pct>=60) { emoji='👍'; msg='不錯！多練習就能更好！'; }
+  else { emoji='📚'; msg='繼續練習，你會進步的！'; }
+  if (pct >= 80) spawnConfetti(30);
+  const phrases = ['Keep it up!','You did a great job!','Practice makes perfect!','Never give up!','Well done!'];
+  a.innerHTML = `
+    <div class="result-screen show">
+      <div class="result-emoji">${emoji}</div>
+      <div class="result-title">遊戲結束！</div>
+      <div class="result-score">${score} / ${total}</div>
+      <div style="font-size:1.5rem;font-weight:800;color:${pct>=80?'var(--accent4)':pct>=60?'var(--accent1)':'var(--accent3)'};">${pct}%</div>
+      <div class="result-msg" style="margin-top:0.5rem">${msg}</div>
+      <div style="font-size:0.82rem;color:var(--muted);font-weight:700;margin-bottom:0.5rem;">🔊 聆聽鼓勵語句</div>
+      <div class="encourage-chips">
+        ${phrases.map(p => `<div class="encourage-chip">${sb(p,'sm',0.85)} ${p}</div>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="resetAndRender()">🔄 再玩一次</button>
+        <button class="btn primary" onclick="selectGame('vocab',document.querySelector('.game-tab'))">📚 看單字</button>
+      </div>
+    </div>`;
+}
+function resetAndRender() { resetGame(); renderGame(); }
+
+/* ============================================================
+   CONFETTI
+   ============================================================ */
+function spawnConfetti(n) {
+  const c = document.getElementById('confettiContainer');
+  const colors = ['#ff8906','#3da9fc','#ef4565','#6fcf97','#bb86fc','#ffd60a'];
+  for (let i=0; i<n; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}%;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;`;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function shuffleArr(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+function shuffleWord(a) { const s=[...a]; shuffleArr(s); if(s.join('')===a.join('')) shuffleArr(s); return s; }
+
+// Pre-load voices (Chrome defers loading)
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+renderGame();
+</script>
+</body>
+</html>

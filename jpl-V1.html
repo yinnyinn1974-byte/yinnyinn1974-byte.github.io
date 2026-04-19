@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日本語道場 — 互動日語學習</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f3ec;
+    --paper: #fdf9f2;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: rgba(30,20,10,0.10);
+    --border-strong: rgba(30,20,10,0.20);
+    --text: #1a110a;
+    --muted: #7a6a5a;
+    --ink: #1a110a;
+    --red: #c0392b;
+    --red-light: rgba(192,57,43,0.08);
+    --red-glow: rgba(192,57,43,0.25);
+    --indigo: #2c3e6b;
+    --indigo-light: rgba(44,62,107,0.08);
+    --gold: #b8860b;
+    --gold-light: rgba(184,134,11,0.10);
+    --sakura: #e8a0a8;
+    --green: #2d6a4f;
+    --beginner: #2d6a4f;
+    --intermediate: #2c3e6b;
+    --advanced: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'M PLUS Rounded 1c','Noto Sans JP',sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(30,20,10,0.012) 40px,rgba(30,20,10,0.012) 41px),
+      repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(30,20,10,0.008) 40px,rgba(30,20,10,0.008) 41px);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '学'; position: fixed; right: -40px; top: 50%; transform: translateY(-50%);
+    font-family: 'Noto Serif JP',serif; font-size: 340px; font-weight: 900;
+    color: rgba(44,62,107,0.04); line-height: 1; pointer-events: none; z-index: 0;
+  }
+  .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+  header { text-align: center; padding: 2.5rem 0 2rem; position: relative; }
+  .hanko { position: absolute; right: 1rem; top: 1.5rem; width: 56px; height: 56px; border: 2.5px solid var(--red); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP',serif; font-size: 1.1rem; font-weight: 900; color: var(--red); transform: rotate(-8deg); opacity: 0.7; }
+  .logo-jp { font-family: 'Noto Serif JP',serif; font-size: 1rem; font-weight: 700; letter-spacing: 6px; color: var(--red); margin-bottom: 0.4rem; }
+  .logo { font-family: 'Noto Serif JP',serif; font-size: 2.8rem; font-weight: 900; color: var(--ink); letter-spacing: -1px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+  .logo-kanji { color: var(--red); font-size: 2.4rem; }
+  .logo-divider { width: 80px; height: 2px; background: linear-gradient(90deg,transparent,var(--red),transparent); margin: 0.8rem auto; }
+  .tagline { color: var(--muted); font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; }
+
+  .section-title { font-family: 'Noto Serif JP',serif; font-size: 0.8rem; font-weight: 700; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.9rem; display: flex; align-items: center; gap: 0.75rem; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .level-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.9rem; margin-bottom: 2rem; }
+  .level-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 1.4rem 1rem; text-align: center; cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+  .level-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; transition: all 0.25s; opacity: 0; }
+  .level-card.beginner::before { background: var(--beginner); }
+  .level-card.intermediate::before { background: var(--intermediate); }
+  .level-card.advanced::before { background: var(--advanced); }
+  .level-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-3px); }
+  .level-card:hover::before,.level-card.active::before { opacity: 1; }
+  .level-card.active { box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+  .level-card.active.beginner { border-color: var(--beginner); }
+  .level-card.active.intermediate { border-color: var(--intermediate); }
+  .level-card.active.advanced { border-color: var(--advanced); }
+  .level-badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 2px; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 0.6rem; font-family: 'Noto Serif JP',serif; }
+  .beginner .level-badge { background: rgba(45,106,79,0.1); color: var(--beginner); }
+  .intermediate .level-badge { background: rgba(44,62,107,0.1); color: var(--indigo); }
+  .advanced .level-badge { background: var(--red-light); color: var(--red); }
+  .level-name { font-family: 'Noto Serif JP',serif; font-size: 1.4rem; font-weight: 900; color: var(--ink); margin-bottom: 0.2rem; }
+  .level-sub { font-size: 0.78rem; color: var(--muted); font-weight: 700; }
+
+  .game-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .game-tab { background: var(--surface); border: 1.5px solid var(--border); border-radius: 2px; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 800; font-family: 'M PLUS Rounded 1c',sans-serif; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+  .game-tab:hover { border-color: var(--border-strong); color: var(--ink); }
+  .game-tab.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .game-area { background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 2rem; min-height: 380px; box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+
+  .score-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .score-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 0.35rem 0.85rem; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 0.4rem; color: var(--muted); }
+  .score-val { color: var(--red); font-size: 1rem; font-family: 'Noto Serif JP',serif; }
+  .progress-bar { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; margin: 0 1rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,var(--red),var(--gold)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+
+  /* ===== SPEAK BUTTON (Japanese red theme) ===== */
+  .speak-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1.5px solid rgba(192,57,43,0.30);
+    background: var(--red-light); color: var(--red);
+    cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+    padding: 0; line-height: 1; font-size: 13px;
+    width: 28px; height: 28px;
+  }
+  .speak-btn:hover { background: rgba(192,57,43,0.18); border-color: var(--red); transform: scale(1.15); }
+  .speak-btn:active { transform: scale(0.92); }
+  .speak-btn.speaking { background: rgba(184,134,11,0.15); border-color: var(--gold); color: var(--gold); animation: speakPulse 0.55s ease infinite alternate; }
+  .speak-btn.sm { width: 22px; height: 22px; font-size: 10px; }
+  .speak-btn.lg { width: 38px; height: 38px; font-size: 16px; border-radius: 8px; }
+  @keyframes speakPulse { from { box-shadow: 0 0 0 0 rgba(192,57,43,0.45); } to { box-shadow: 0 0 0 7px rgba(192,57,43,0); } }
+
+  /* TTS notice */
+  .tts-notice {
+    background: var(--red-light); border-left: 3px solid var(--red);
+    border-radius: 0 4px 4px 0; padding: 0.55rem 1rem;
+    font-size: 0.8rem; font-weight: 800; color: var(--red);
+    margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem;
+    font-family: 'Noto Sans JP',sans-serif;
+  }
+
+  .question-label { font-size: 0.75rem; color: var(--muted); font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .question-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.4rem; }
+  .question-text { font-family: 'Noto Serif JP',serif; font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: var(--ink); flex: 1; }
+  .question-reading { font-size: 0.82rem; color: var(--muted); font-weight: 700; margin-bottom: 1.2rem; font-family: 'Noto Sans JP',sans-serif; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+  .option-btn { background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; padding: 0.8rem 0.9rem; font-size: 0.92rem; font-weight: 700; font-family: 'Noto Sans JP',sans-serif; color: var(--ink); cursor: pointer; text-align: left; transition: all 0.18s; display: flex; align-items: center; gap: 0.6rem; }
+  .opt-letter { width: 26px; height: 26px; border-radius: 2px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 900; font-family: 'Noto Serif JP',serif; flex-shrink: 0; transition: all 0.18s; }
+  .opt-text { flex: 1; }
+  .option-btn:hover:not(:disabled) { border-color: var(--red); background: var(--red-light); }
+  .option-btn:hover:not(:disabled) .opt-letter { background: var(--red); color: #fff; border-color: var(--red); }
+  .option-btn.correct { border-color: var(--green); background: rgba(45,106,79,0.07); }
+  .option-btn.correct .opt-letter { background: var(--green); color: #fff; border-color: var(--green); }
+  .option-btn.wrong { border-color: var(--red); background: var(--red-light); }
+  .option-btn.wrong .opt-letter { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .match-col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .match-col-title { font-size: 0.72rem; font-weight: 900; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.3rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .match-item { background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; padding: 0.6rem 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.18s; font-size: 0.95rem; font-family: 'Noto Sans JP',sans-serif; display: flex; align-items: center; gap: 0.5rem; }
+  .match-item-label { flex: 1; }
+  .match-item:hover { border-color: var(--red); color: var(--red); }
+  .match-item.selected { border-color: var(--indigo); background: var(--indigo-light); color: var(--indigo); }
+  .match-item.matched { border-color: var(--green); background: rgba(45,106,79,0.07); color: var(--green); cursor: default; opacity: 0.65; }
+  .match-item.wrong-flash { border-color: var(--red); background: var(--red-light); animation: shake 0.3s ease; }
+
+  .scramble-display { text-align: center; margin-bottom: 0.5rem; }
+  .scramble-word-row { display: flex; align-items: center; justify-content: center; gap: 0.7rem; }
+  .scramble-jp { font-family: 'Noto Serif JP',serif; font-size: 1.6rem; font-weight: 900; color: var(--ink); }
+  .scramble-hint { background: var(--gold-light); border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; padding: 0.55rem 1rem; font-size: 0.84rem; font-weight: 700; color: var(--ink); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; font-family: 'Noto Sans JP',sans-serif; }
+  .scramble-hint-text { flex: 1; }
+  .scramble-letters { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .letter-tile { min-width: 52px; height: 58px; padding: 0 0.5rem; background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.18s; font-family: 'Noto Sans JP',sans-serif; color: var(--ink); }
+  .letter-tile:hover { border-color: var(--red); color: var(--red); transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .letter-tile.used { opacity: 0.22; cursor: default; transform: none; box-shadow: none; }
+  .answer-slots { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .answer-slot { min-width: 52px; height: 58px; padding: 0 0.5rem; background: transparent; border: 1.5px dashed var(--border-strong); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; font-family: 'Noto Sans JP',sans-serif; cursor: pointer; transition: all 0.18s; color: var(--ink); }
+  .answer-slot.filled { border-style: solid; border-color: var(--indigo); background: var(--indigo-light); color: var(--indigo); }
+  .answer-slot.correct-slot { border-color: var(--green); background: rgba(45,106,79,0.08); color: var(--green); }
+  .answer-slot.wrong-slot { border-color: var(--red); background: var(--red-light); animation: shake 0.3s ease; }
+
+  .sentence-row { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin: 0.5rem 0 0.4rem; flex-wrap: wrap; }
+  .sentence-display { font-size: 1.22rem; font-weight: 700; font-family: 'Noto Serif JP',serif; line-height: 2; text-align: center; color: var(--ink); }
+  .sentence-meaning { text-align: center; font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 1.2rem; }
+  .blank-input { display: inline-block; border: none; border-bottom: 2.5px solid var(--gold); background: transparent; color: var(--gold); font-size: 1.22rem; font-weight: 800; font-family: 'Noto Sans JP',sans-serif; width: 130px; text-align: center; outline: none; transition: border-color 0.18s; }
+  .blank-input:focus { border-color: var(--red); color: var(--red); }
+  .blank-input.correct { border-color: var(--green); color: var(--green); }
+  .blank-input.wrong { border-color: var(--red); color: var(--red); animation: shake 0.3s ease; }
+
+  .word-bank { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .word-chip { background: var(--bg); border: 1.5px solid var(--border); border-radius: 2px; padding: 0.3rem 0.75rem; font-size: 0.9rem; font-weight: 800; font-family: 'Noto Sans JP',sans-serif; cursor: pointer; transition: all 0.18s; color: var(--indigo); display: flex; align-items: center; gap: 0.4rem; }
+  .word-chip:hover { border-color: var(--indigo); background: var(--indigo-light); transform: translateY(-2px); }
+  .word-chip.used { opacity: 0.28; cursor: default; transform: none; }
+
+  /* VOCAB */
+  .vocab-card { border-bottom: 1px solid var(--border); padding: 1rem 0; display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: start; transition: all 0.15s; }
+  .vocab-card:hover { background: var(--bg); margin: 0 -1rem; padding: 1rem; border-radius: 2px; }
+  .vocab-card:last-child { border-bottom: none; }
+  .vocab-left { }
+  .vocab-jp { font-family: 'Noto Serif JP',serif; font-size: 1.3rem; font-weight: 900; color: var(--ink); }
+  .vocab-kanji { font-family: 'Noto Serif JP',serif; font-size: 1rem; font-weight: 700; color: var(--muted); margin-top: 0.1rem; }
+  .vocab-reading-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.15rem; }
+  .vocab-reading { font-size: 0.72rem; font-weight: 700; color: var(--red); font-family: 'Noto Sans JP',sans-serif; letter-spacing: 0.5px; font-style: italic; }
+  .vocab-jlpt { display: inline-block; font-size: 0.65rem; font-weight: 900; padding: 0.1rem 0.45rem; border-radius: 2px; margin-bottom: 0.4rem; letter-spacing: 0.5px; }
+  .jlpt-n5,.jlpt-n4 { background: rgba(45,106,79,0.1); color: var(--green); }
+  .jlpt-n3 { background: var(--indigo-light); color: var(--indigo); }
+  .jlpt-n2 { background: var(--gold-light); color: var(--gold); }
+  .jlpt-n1 { background: var(--red-light); color: var(--red); }
+  .vocab-meaning { font-size: 0.95rem; font-weight: 700; color: var(--ink); margin-bottom: 0.35rem; }
+  .vocab-example-row { display: flex; align-items: flex-start; gap: 0.45rem; }
+  .vocab-example { font-size: 0.8rem; color: var(--muted); font-family: 'Noto Sans JP',sans-serif; line-height: 1.6; flex: 1; }
+
+  .btn { background: transparent; border: 1.5px solid var(--border-strong); border-radius: 2px; padding: 0.6rem 1.4rem; font-size: 0.88rem; font-weight: 800; font-family: 'M PLUS Rounded 1c',sans-serif; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+  .btn:hover { border-color: var(--ink); color: var(--ink); }
+  .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn.primary:hover { background: #a33020; }
+  .btn-row { display: flex; gap: 0.65rem; justify-content: center; margin-top: 1rem; }
+
+  .feedback-banner { padding: 0.6rem 1.25rem; border-radius: 2px; font-weight: 800; font-size: 0.9rem; margin: 0.9rem 0; display: none; font-family: 'Noto Sans JP',sans-serif; }
+  .feedback-banner.show { display: block; animation: popIn 0.25s ease; }
+  .feedback-banner.correct { background: rgba(45,106,79,0.08); color: var(--green); border-left: 3px solid var(--green); }
+  .feedback-banner.wrong { background: var(--red-light); color: var(--red); border-left: 3px solid var(--red); }
+
+  /* KANA TABLE */
+  .kana-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.8rem; }
+  .kana-tab { background: var(--bg); border: 1.5px solid var(--border); border-radius: 2px; padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.15s; color: var(--muted); font-family: 'Noto Sans JP',sans-serif; }
+  .kana-tab.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .kana-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.4rem; margin-bottom: 1rem; }
+  .kana-cell { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.2rem; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; }
+  .kana-cell:hover { border-color: var(--red); background: var(--red-light); }
+  .kana-cell.playing { border-color: var(--red); background: var(--red-light); animation: kanaPulse 0.5s ease; }
+  .kana-char { font-family: 'Noto Serif JP',serif; font-size: 1.3rem; font-weight: 700; color: var(--ink); line-height: 1.2; }
+  .kana-rom { font-size: 0.65rem; color: var(--muted); font-weight: 800; letter-spacing: 0.5px; margin-top: 0.15rem; }
+  .kana-speaker { position: absolute; top: 3px; right: 3px; font-size: 9px; color: var(--red); opacity: 0.6; }
+  @keyframes kanaPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+  /* RESULT */
+  .result-screen { text-align: center; padding: 2rem 0; display: none; }
+  .result-screen.show { display: block; animation: popIn 0.4s ease; }
+  .result-kanji { font-family: 'Noto Serif JP',serif; font-size: 5rem; font-weight: 900; color: var(--red); opacity: 0.1; line-height: 1; margin-bottom: -1rem; }
+  .result-title { font-family: 'Noto Serif JP',serif; font-size: 1.6rem; font-weight: 900; color: var(--ink); margin-bottom: 0.5rem; }
+  .result-score { font-family: 'Noto Serif JP',serif; font-size: 3.5rem; font-weight: 900; color: var(--red); margin-bottom: 0.3rem; }
+  .result-msg { color: var(--muted); font-weight: 700; margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .encourage-chips { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 0.8rem 0 1.5rem; }
+  .encourage-chip { background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 0.35rem 0.8rem; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; color: var(--muted); font-family: 'Noto Sans JP',sans-serif; }
+
+  /* PETAL ANIMATION */
+  .petal-container { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+  .petal { position: absolute; font-size: 16px; animation: petalFall linear forwards; opacity: 0.8; }
+  @keyframes petalFall { 0%{transform:translateY(-30px) rotate(0deg) translateX(0);opacity:1} 100%{transform:translateY(105vh) rotate(540deg) translateX(60px);opacity:0} }
+
+  @keyframes popIn { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  @media (max-width:600px) {
+    .level-grid{grid-template-columns:1fr}
+    .options-grid{grid-template-columns:1fr}
+    .match-grid{grid-template-columns:1fr}
+    .kana-grid{grid-template-columns:repeat(5,1fr)}
+    .logo{font-size:1.8rem}
+    .hanko{display:none}
+    .vocab-card{grid-template-columns:1fr;gap:0.5rem}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="hanko">道<br>場</div>
+    <div class="logo-jp">NIHONGO DŌJŌ</div>
+    <div class="logo"><span class="logo-kanji">日</span>本語道場</div>
+    <div class="logo-divider"></div>
+    <div class="tagline">ひらがな · 語彙 · 文法 · 読解</div>
+  </header>
+
+  <div class="section-title">難易度を選んでください</div>
+  <div class="level-grid">
+    <div class="level-card beginner active" onclick="selectLevel('beginner',this)">
+      <div class="level-badge">初 級</div><div class="level-name">はじめて</div><div class="level-sub">JLPT N5–N4</div>
+    </div>
+    <div class="level-card intermediate" onclick="selectLevel('intermediate',this)">
+      <div class="level-badge">中 級</div><div class="level-name">なかほど</div><div class="level-sub">JLPT N3–N2</div>
+    </div>
+    <div class="level-card advanced" onclick="selectLevel('advanced',this)">
+      <div class="level-badge">上 級</div><div class="level-name">じょうきゅう</div><div class="level-sub">JLPT N1</div>
+    </div>
+  </div>
+
+  <div class="section-title">ゲームを選んでください</div>
+  <div class="game-tabs">
+    <button class="game-tab active" onclick="selectGame('quiz',this)">❓ 選擇題</button>
+    <button class="game-tab" onclick="selectGame('match',this)">🔗 配對遊戲</button>
+    <button class="game-tab" onclick="selectGame('scramble',this)">🔀 拼字遊戲</button>
+    <button class="game-tab" onclick="selectGame('fill',this)">✏️ 填空遊戲</button>
+    <button class="game-tab" onclick="selectGame('vocab',this)">📚 單字表</button>
+    <button class="game-tab" onclick="selectGame('kana',this)">あ 五十音</button>
+  </div>
+
+  <div class="game-area" id="gameArea"></div>
+</div>
+<div class="petal-container" id="petalContainer"></div>
+
+<script>
+/* ============================================================
+   TTS ENGINE — Japanese (ja-JP)
+   ============================================================ */
+let activeSpeakBtn = null;
+
+function speak(text, btn, rate) {
+  if (!window.speechSynthesis) return;
+  rate = rate || 0.85;
+  window.speechSynthesis.cancel();
+
+  if (activeSpeakBtn && activeSpeakBtn === btn) {
+    activeSpeakBtn.classList.remove('speaking');
+    activeSpeakBtn = null;
+    return;
+  }
+  if (activeSpeakBtn) { activeSpeakBtn.classList.remove('speaking'); activeSpeakBtn = null; }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang  = 'ja-JP';
+  utter.rate  = rate;
+  utter.pitch = 1.05;
+
+  // Prefer a Japanese voice
+  const voices = window.speechSynthesis.getVoices();
+  const jaVoice = voices.find(v => v.lang === 'ja-JP' && /google|kyoko|otoya/i.test(v.name))
+               || voices.find(v => v.lang === 'ja-JP')
+               || voices.find(v => v.lang.startsWith('ja'));
+  if (jaVoice) utter.voice = jaVoice;
+
+  if (btn) { btn.classList.add('speaking'); activeSpeakBtn = btn; }
+  utter.onend  = () => { if (btn) btn.classList.remove('speaking'); if (activeSpeakBtn === btn) activeSpeakBtn = null; };
+  utter.onerror= () => { if (btn) btn.classList.remove('speaking'); activeSpeakBtn = null; };
+  window.speechSynthesis.speak(utter);
+}
+
+// Extract Japanese part from example (before 。（ or （)
+function jpOnly(text) {
+  const m = text.match(/^([^（]+)/);
+  return m ? m[1].trim() : text;
+}
+
+// Shorthand: render a speak button
+function sb(text, cls, rate) {
+  cls  = cls  || '';
+  rate = rate || 0.85;
+  const esc = text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return `<button class="speak-btn ${cls}" onclick="event.stopPropagation();speak('${esc}',this,${rate})" title="日本語の発音を聴く">🔊</button>`;
+}
+
+function ttsBanner() {
+  return `<div class="tts-notice">🔊 どこでも <strong>🔊</strong> ボタンをクリックすると日本語の発音が聴けます！</div>`;
+}
+
+/* ============================================================
+   DATA
+   ============================================================ */
+const DATA = {
+  beginner: {
+    jlpt:'N5',
+    vocab:[
+      {jp:'ねこ',    kanji:'猫',    reading:'neko',      meaning:'貓',    example:'うちのねこはかわいいです。（我家的貓很可愛。）',     jlpt:'n5'},
+      {jp:'たべる',  kanji:'食べる', reading:'taberu',    meaning:'吃',    example:'まいあさごはんをたべます。（每天早上吃飯。）',       jlpt:'n5'},
+      {jp:'がっこう', kanji:'学校',  reading:'gakkou',    meaning:'學校',  example:'がっこうはたのしいです。（學校很有趣。）',           jlpt:'n5'},
+      {jp:'ともだち', kanji:'友達',  reading:'tomodachi', meaning:'朋友',  example:'ともだちとあそびます。（和朋友玩。）',               jlpt:'n5'},
+      {jp:'みず',    kanji:'水',    reading:'mizu',      meaning:'水',    example:'みずをのんでください。（請喝水。）',                 jlpt:'n5'},
+      {jp:'おおきい', kanji:'大きい', reading:'ookii',    meaning:'大的',  example:'あのたてものはおおきいです。（那棟建築很大。）',     jlpt:'n5'},
+    ],
+    quiz:[
+      {q:'「ありがとう」の意味は？',              reading:'"arigatou" の意味は？',       opts:['再見','你好','謝謝','對不起'],                                                                          oSpeak:['さようなら','こんにちは','ありがとう','すみません'],   ans:2},
+      {q:'「犬」はどう読みますか？',              reading:'「犬」は何と読みますか？',     opts:['ねこ','いぬ','とり','うま'],                                                                            oSpeak:['ねこ','いぬ','とり','うま'],                           ans:1},
+      {q:'助詞「を」はどんな役割がありますか？',    reading:'',                           opts:['主語を示す','目的語を示す','場所を示す','時間を示す'],                                                  oSpeak:['主語を示す','目的語を示す','場所を示す','時間を示す'], ans:1},
+      {q:'「月曜日」はなんですか？',              reading:'「月曜日」は中国語で何？',     opts:['星期一','星期三','星期五','星期日'],                                                                    oSpeak:['月曜日','水曜日','金曜日','日曜日'],                   ans:0},
+      {q:'「わたしはがくせいです」の意味は？',     reading:'',                           opts:['我是老師','我是醫生','我是學生','我是公司員工'],                                                        oSpeak:['わたしはせんせいです','わたしはいしゃです','わたしはがくせいです','わたしはかいしゃいんです'], ans:2},
+    ],
+    match:{pairs:[
+      {jp:'ねこ（猫）',  zh:'貓'},
+      {jp:'みず（水）',  zh:'水'},
+      {jp:'はな（花）',  zh:'花'},
+      {jp:'そら（空）',  zh:'天空'},
+      {jp:'やま（山）',  zh:'山'},
+    ]},
+    scramble:[
+      {word:'NEKO',    display:'ねこ（猫）',    jpSpeak:'ねこ',    hint:'にゃーと鳴く動物'},
+      {word:'MIZU',    display:'みず（水）',    jpSpeak:'みず',    hint:'毎日飲む透明な液体'},
+      {word:'HANA',    display:'はな（花）',    jpSpeak:'はな',    hint:'春に咲く美しいもの'},
+      {word:'SORA',    display:'そら（空）',    jpSpeak:'そら',    hint:'青くて広い場所'},
+      {word:'YAMA',    display:'やま（山）',    jpSpeak:'やま',    hint:'高くて大きな地形'},
+    ],
+    fill:[
+      {sentence:'わたし ___ がくせいです。',                  ans:'は',   bank:['は','が','を','で'], meaning:'我是學生。'},
+      {sentence:'きのう えいが ___ みました。',               ans:'を',   bank:['は','が','を','で'], meaning:'昨天看了電影。'},
+      {sentence:'ここ ___ がっこうです。',                    ans:'は',   bank:['は','が','を','に'], meaning:'這裡是學校。'},
+      {sentence:'バス ___ がっこうに いきます。',             ans:'で',   bank:['は','が','を','で'], meaning:'搭公車去學校。'},
+    ],
+  },
+  intermediate:{
+    jlpt:'N3',
+    vocab:[
+      {jp:'がんばる',  kanji:'頑張る', reading:'ganbaru',  meaning:'努力、加油',  example:'しけんのためにがんばっています。（為了考試而努力。）', jlpt:'n3'},
+      {jp:'けいけん',  kanji:'経験',   reading:'keiken',   meaning:'經驗',        example:'りょこうはいいけいけんになります。（旅行會成為好的經驗。）', jlpt:'n3'},
+      {jp:'かんしゃ',  kanji:'感謝',   reading:'kansha',   meaning:'感謝',        example:'ご支援にかんしゃいたします。（感謝您的支持。）', jlpt:'n2'},
+      {jp:'やくそく',  kanji:'約束',   reading:'yakusoku', meaning:'約定、承諾',  example:'かならずやくそくをまもります。（一定會遵守約定。）', jlpt:'n3'},
+      {jp:'しんぱい',  kanji:'心配',   reading:'shinpai',  meaning:'擔心',        example:'しんぱいしないでください。（請不要擔心。）', jlpt:'n4'},
+      {jp:'えんりょ',  kanji:'遠慮',   reading:'enryo',    meaning:'客氣、顧慮',  example:'えんりょなくどうぞ。（請不要客氣。）', jlpt:'n2'},
+    ],
+    quiz:[
+      {q:'「〜ために」はどんな意味ですか？',                      reading:'',  opts:['雖然…但是','為了…目的','因為…原因','如果…的話'],                                                                           oSpeak:['〜けれども','〜ために','〜から','〜たら'],            ans:1},
+      {q:'「彼女は来なかったかもしれない。」の意味は？',           reading:'',  opts:['她肯定沒來','她也許沒來','她沒來過','她不想來'],                                                                             oSpeak:['かならず来なかった','たぶん来なかった','来たことがない','来たくなかった'], ans:1},
+      {q:'「もっと練習___ば、上手になれる。」に入る言葉は？',      reading:'',  opts:['し','する','すれ','して'],                                                                                                  oSpeak:['し','する','すれ','して'],                             ans:2},
+      {q:'「遠慮なく」の意味は？',                               reading:'',  opts:['請客氣一點','不要客氣','非常感謝','對不起'],                                                                                 oSpeak:['えんりょしてください','えんりょなく','ありがとう','すみません'], ans:1},
+      {q:'「音楽を聴き___勉強する。」に合う形は？',              reading:'',  opts:['ながら','てながら','ながらした','をしながら'],                                                                               oSpeak:['ながら','てながら','ながらした','をしながら'],         ans:0},
+    ],
+    match:{pairs:[
+      {jp:'複雑（ふくざつ）',  zh:'複雜的'},
+      {jp:'丁寧（ていねい）',  zh:'有禮貌的'},
+      {jp:'残念（ざんねん）',  zh:'遺憾、可惜'},
+      {jp:'自信（じしん）',    zh:'自信'},
+      {jp:'余裕（よゆう）',    zh:'餘裕、從容'},
+    ]},
+    scramble:[
+      {word:'KEIKEN',   display:'経験（けいけん）',  jpSpeak:'けいけん',  hint:'何かを体験して得るもの'},
+      {word:'YAKUSOKU', display:'約束（やくそく）',  jpSpeak:'やくそく',  hint:'守らなければならないもの'},
+      {word:'KANSHA',   display:'感謝（かんしゃ）',  jpSpeak:'かんしゃ',  hint:'ありがとうの気持ち'},
+      {word:'SHINPAI',  display:'心配（しんぱい）',  jpSpeak:'しんぱい',  hint:'気になって不安な気持ち'},
+      {word:'JISHIN',   display:'自信（じしん）',    jpSpeak:'じしん',    hint:'自分を信じること'},
+    ],
+    fill:[
+      {sentence:'明日、会議 ___ あるから、早く来てください。',  ans:'が',        bank:['は','が','を','で'],                          meaning:'明天有會議，所以請早點來。'},
+      {sentence:'彼はいつも約束を___人です。',                 ans:'守る',      bank:['守る','守った','守り','守れ'],                meaning:'他是個總是遵守約定的人。'},
+      {sentence:'___、手伝ってくれませんか？',                 ans:'もし良ければ', bank:['もし良ければ','なぜなら','それとも','つまり'], meaning:'如果方便的話，可以幫我嗎？'},
+      {sentence:'日本語を___ために、毎日練習します。',          ans:'上手になる', bank:['上手になる','上手になった','上手になり','上手'], meaning:'為了日語變好，每天練習。'},
+    ],
+  },
+  advanced:{
+    jlpt:'N1',
+    vocab:[
+      {jp:'あいまい',  kanji:'曖昧', reading:'aimai',    meaning:'模糊、曖昧不明', example:'彼の返答は曖昧で、真意が読み取れなかった。（他的回答很曖昧，看不出真意。）', jlpt:'n1'},
+      {jp:'ぎぜん',    kanji:'偽善', reading:'gizen',    meaning:'偽善',           example:'彼の行動は偽善に過ぎないと批判された。（他的行為被批評不過是偽善。）', jlpt:'n1'},
+      {jp:'ちんもく',  kanji:'沈黙', reading:'chinmoku', meaning:'沉默',           example:'沈黙は時に雄弁より力強い。（沉默有時比雄辯更有力。）', jlpt:'n1'},
+      {jp:'きゅうめい', kanji:'究明', reading:'kyuumei',  meaning:'究明、追究',     example:'事故の原因を究明する必要がある。（有必要追究事故的原因。）', jlpt:'n1'},
+      {jp:'もくし',    kanji:'黙示', reading:'mokuji',   meaning:'默示、暗示',     example:'彼の沈黙は黙示的な同意と受け取られた。（他的沉默被理解為默示的同意。）', jlpt:'n1'},
+      {jp:'ぼうがい',  kanji:'妨害', reading:'bougai',   meaning:'妨礙、阻礙',     example:'業務妨害罪で訴えられた。（以妨礙業務罪被起訴。）', jlpt:'n1'},
+    ],
+    quiz:[
+      {q:'「〜に即して」の最も適切な意味は？',                                               reading:'',  opts:['無視某事物','根據、依照某事物','反對某事物','超越某事物'],                                                       oSpeak:['むしして','に即して','はんたいして','こえて'],         ans:1},
+      {q:'「彼の発言は事実（　）反するものだった。」の（　）に入る言葉は？',                   reading:'',  opts:['について','において','に対して','とともに'],                                                                      oSpeak:['について','において','に対して','とともに'],           ans:2},
+      {q:'「忸怩たる思い」とはどんな気持ちですか？',                                          reading:'',  opts:['非常高興的心情','極度慚愧的心情','充滿期待的心情','十分憤怒的心情'],                                               oSpeak:['とてもうれしい気持ち','恥ずかしくて後悔する気持ち','とても楽しみな気持ち','非常に怒る気持ち'], ans:1},
+      {q:'「〜をもって」の正しい用法は？',                                                    reading:'',  opts:['本日をもって閉店いたします。','本日をもって行きます。','本日をもって食べます。','本日をもって寝ます。'],            oSpeak:['本日をもって閉店いたします','本日をもって行きます','本日をもって食べます','本日をもって寝ます'], ans:0},
+      {q:'「杞憂」の意味は？',                                                                reading:'',  opts:['遠大的理想','無謂的擔憂','過去的遺憾','意外的驚喜'],                                                              oSpeak:['きゅう','きゆう','後悔','きき'],                       ans:1},
+    ],
+    match:{pairs:[
+      {jp:'逡巡（しゅんじゅん）',  zh:'猶豫不決'},
+      {jp:'恣意的（しいてき）',    zh:'任意的、隨心所欲的'},
+      {jp:'齟齬（そご）',          zh:'齟齬、不一致'},
+      {jp:'忖度（そんたく）',      zh:'揣摩他人心意'},
+      {jp:'瞻仰（せんぎょう）',    zh:'仰望、崇敬'},
+    ]},
+    scramble:[
+      {word:'CHINMOKU', display:'沈黙（ちんもく）',  jpSpeak:'ちんもく',  hint:'言葉を発しない状態'},
+      {word:'AIMAI',    display:'曖昧（あいまい）',  jpSpeak:'あいまい',  hint:'はっきりしない、ぼんやりとした状態'},
+      {word:'GIZEN',    display:'偽善（ぎぜん）',    jpSpeak:'ぎぜん',    hint:'本心とは違う善人のふりをすること'},
+      {word:'BOUGAI',   display:'妨害（ぼうがい）',  jpSpeak:'ぼうがい',  hint:'邪魔をして妨げること'},
+      {word:'KYUUMEI',  display:'究明（きゅうめい）',jpSpeak:'きゅうめい',hint:'物事の真相を徹底的に調べること'},
+    ],
+    fill:[
+      {sentence:'状況が複雑になれば___、焦らないことが大切だ。',         ans:'なるほど',    bank:['なるほど','すれば','なるより','こそ'],                    meaning:'情況越複雜，越重要的是不要焦急。'},
+      {sentence:'その発言は事実に___するものだった。',                   ans:'反',          bank:['反','対','即','準'],                                      meaning:'那個發言是與事實相悖的東西。'},
+      {sentence:'本日___もって、この店は閉店いたします。',               ans:'を',          bank:['は','が','を','で'],                                      meaning:'即日起，本店將結束營業。'},
+      {sentence:'彼の議論は一見___だが、矛盾を含んでいる。',            ans:'明快',        bank:['明快','曖昧','複雑','簡単'],                              meaning:'他的論述乍看明快，但包含矛盾。'},
+    ],
+  }
+};
+
+const HIRAGANA = [
+  {h:'あ',r:'a'},{h:'い',r:'i'},{h:'う',r:'u'},{h:'え',r:'e'},{h:'お',r:'o'},
+  {h:'か',r:'ka'},{h:'き',r:'ki'},{h:'く',r:'ku'},{h:'け',r:'ke'},{h:'こ',r:'ko'},
+  {h:'さ',r:'sa'},{h:'し',r:'shi'},{h:'す',r:'su'},{h:'せ',r:'se'},{h:'そ',r:'so'},
+  {h:'た',r:'ta'},{h:'ち',r:'chi'},{h:'つ',r:'tsu'},{h:'て',r:'te'},{h:'と',r:'to'},
+  {h:'な',r:'na'},{h:'に',r:'ni'},{h:'ぬ',r:'nu'},{h:'ね',r:'ne'},{h:'の',r:'no'},
+  {h:'は',r:'ha'},{h:'ひ',r:'hi'},{h:'ふ',r:'fu'},{h:'へ',r:'he'},{h:'ほ',r:'ho'},
+  {h:'ま',r:'ma'},{h:'み',r:'mi'},{h:'む',r:'mu'},{h:'め',r:'me'},{h:'も',r:'mo'},
+  {h:'や',r:'ya'},{h:'　',r:''},{h:'ゆ',r:'yu'},{h:'　',r:''},{h:'よ',r:'yo'},
+  {h:'ら',r:'ra'},{h:'り',r:'ri'},{h:'る',r:'ru'},{h:'れ',r:'re'},{h:'ろ',r:'ro'},
+  {h:'わ',r:'wa'},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},{h:'を',r:'wo'},
+  {h:'ん',r:'n'},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},
+];
+const KATAKANA = [
+  {h:'ア',r:'a'},{h:'イ',r:'i'},{h:'ウ',r:'u'},{h:'エ',r:'e'},{h:'オ',r:'o'},
+  {h:'カ',r:'ka'},{h:'キ',r:'ki'},{h:'ク',r:'ku'},{h:'ケ',r:'ke'},{h:'コ',r:'ko'},
+  {h:'サ',r:'sa'},{h:'シ',r:'shi'},{h:'ス',r:'su'},{h:'セ',r:'se'},{h:'ソ',r:'so'},
+  {h:'タ',r:'ta'},{h:'チ',r:'chi'},{h:'ツ',r:'tsu'},{h:'テ',r:'te'},{h:'ト',r:'to'},
+  {h:'ナ',r:'na'},{h:'ニ',r:'ni'},{h:'ヌ',r:'nu'},{h:'ネ',r:'ne'},{h:'ノ',r:'no'},
+  {h:'ハ',r:'ha'},{h:'ヒ',r:'hi'},{h:'フ',r:'fu'},{h:'ヘ',r:'he'},{h:'ホ',r:'ho'},
+  {h:'マ',r:'ma'},{h:'ミ',r:'mi'},{h:'ム',r:'mu'},{h:'メ',r:'me'},{h:'モ',r:'mo'},
+  {h:'ヤ',r:'ya'},{h:'　',r:''},{h:'ユ',r:'yu'},{h:'　',r:''},{h:'ヨ',r:'yo'},
+  {h:'ラ',r:'ra'},{h:'リ',r:'ri'},{h:'ル',r:'ru'},{h:'レ',r:'re'},{h:'ロ',r:'ro'},
+  {h:'ワ',r:'wa'},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},{h:'ヲ',r:'wo'},
+  {h:'ン',r:'n'},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},{h:'　',r:''},
+];
+
+let state = {
+  level:'beginner', game:'quiz',
+  score:0, qIdx:0, answered:false,
+  matchSel:null, matchDone:new Set(), matchScore:0,
+  scrAnswer:[], scrShuffled:[], scrUsed:new Set(),
+  kanaTab:'hira',
+};
+
+function selectLevel(level, el) {
+  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); state.level = level; resetGame(); renderGame();
+}
+function selectGame(game, el) {
+  document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active'); state.game = game; resetGame(); renderGame();
+}
+function resetGame() {
+  state.score=0; state.qIdx=0; state.answered=false;
+  state.matchSel=null; state.matchDone=new Set(); state.matchScore=0;
+  state.scrAnswer=[]; state.scrShuffled=[]; state.scrUsed=new Set();
+  window.speechSynthesis.cancel(); activeSpeakBtn=null;
+}
+function renderGame() {
+  const d=DATA[state.level], a=document.getElementById('gameArea');
+  a.innerHTML='';
+  if(state.game==='quiz')     renderQuiz(a,d);
+  else if(state.game==='match')    renderMatch(a,d);
+  else if(state.game==='scramble') renderScramble(a,d);
+  else if(state.game==='fill')     renderFill(a,d);
+  else if(state.game==='vocab')    renderVocab(a,d);
+  else if(state.game==='kana')     renderKana(a);
+}
+
+/* ============================================================
+   QUIZ — speak question (JP) + each option (JP)
+   ============================================================ */
+function renderQuiz(a, d) {
+  const qs=d.quiz, total=qs.length;
+  if (state.qIdx>=total) { renderResult(a,state.score,total); return; }
+  const q=qs[state.qIdx];
+  const pct=(state.qIdx/total*100).toFixed(0);
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">点数 <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${total}</div>
+    </div>
+    <div class="question-label">問題 ${state.qIdx+1}</div>
+    <div class="question-row">
+      ${sb(q.q,'lg',0.8)}
+      <div class="question-text">${q.q}</div>
+    </div>
+    ${q.reading ? `<div class="question-reading">${q.reading}</div>` : ''}
+    <div class="options-grid">
+      ${['ア','イ','ウ','エ'].map((l,i)=>`
+        <button class="option-btn" onclick="answerQuiz(${i})" id="opt${i}">
+          <span class="opt-letter">${l}</span>
+          <span class="opt-text">${q.opts[i]}</span>
+          ${q.oSpeak && q.oSpeak[i] ? sb(q.oSpeak[i],'sm',0.82) : ''}
+        </button>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row" id="nextRow" style="display:none">
+      <button class="btn primary" onclick="nextQuiz()">次の問題 →</button>
+    </div>`;
+}
+function answerQuiz(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  const q=DATA[state.level].quiz[state.qIdx];
+  const fb=document.getElementById('fb');
+  document.querySelectorAll('.option-btn').forEach((b,i) => {
+    b.disabled=true;
+    if (i===q.ans) b.classList.add('correct');
+    if (i===idx && i!==q.ans) b.classList.add('wrong');
+  });
+  if (idx===q.ans) {
+    state.score++;
+    fb.textContent='✓ 正解！素晴らしい！'; fb.className='feedback-banner correct show';
+    if (q.oSpeak && q.oSpeak[q.ans]) setTimeout(()=>speak(q.oSpeak[q.ans],null,0.8),350);
+    spawnPetals(8);
+  } else {
+    fb.textContent=`✗ 正解は：${q.opts[q.ans]}`; fb.className='feedback-banner wrong show';
+    if (q.oSpeak && q.oSpeak[q.ans]) setTimeout(()=>speak(q.oSpeak[q.ans],null,0.8),350);
+  }
+  document.getElementById('nextRow').style.display='flex';
+}
+function nextQuiz() { state.qIdx++; state.answered=false; renderQuiz(document.getElementById('gameArea'),DATA[state.level]); }
+
+/* ============================================================
+   MATCH — speak button on JP words + auto-speak on match
+   ============================================================ */
+function renderMatch(a, d) {
+  const pairs=d.match.pairs, total=pairs.length;
+  if (state.matchDone.size>=total) { renderResult(a,state.matchScore,total); return; }
+  const zh=pairs.map((p,i)=>({t:p.zh,i}));
+  shuffleArr(zh);
+  // Extract the hiragana part from the pair label for speaking
+  // e.g. 'ねこ（猫）' -> 'ねこ'
+  function jpSpeak(label) { return label.replace(/（[^）]*）/g,'').trim(); }
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">✓ <span class="score-val">${state.matchScore}</span> / ${total}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.matchDone.size/total*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">配対ゲーム</div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted);font-weight:700;margin-bottom:1rem;">🔊 発音を聴いてから、日本語と中国語を配対してください！</div>
+    <div class="match-grid">
+      <div class="match-col">
+        <div class="match-col-title">🇯🇵 日本語</div>
+        ${pairs.map((p,i)=>`
+          <div class="match-item${state.matchDone.has(i)?' matched':''}" id="jp_${i}" onclick="pickMatch('jp',${i})">
+            ${sb(jpSpeak(p.jp),'sm',0.8)}
+            <span class="match-item-label">${p.jp}</span>
+          </div>`).join('')}
+      </div>
+      <div class="match-col">
+        <div class="match-col-title">🇹🇼 中文</div>
+        ${zh.map(w=>`
+          <div class="match-item${state.matchDone.has(w.i)?' matched':''}" id="zh_${w.i}" onclick="pickMatch('zh',${w.i})">
+            <span class="match-item-label">${w.t}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="feedback-banner" id="fb"></div>`;
+  // store jpSpeak fn for pickMatch
+  a._jpSpeak = jpSpeak;
+  a._pairs = pairs;
+}
+function pickMatch(side, idx) {
+  if (state.matchDone.has(idx)) return;
+  const fb=document.getElementById('fb');
+  const a=document.getElementById('gameArea');
+  if (!state.matchSel) { state.matchSel={side,idx}; document.getElementById(`${side}_${idx}`).classList.add('selected'); return; }
+  const prev=state.matchSel;
+  if (prev.side===side) {
+    document.getElementById(`${prev.side}_${prev.idx}`).classList.remove('selected');
+    state.matchSel={side,idx}; document.getElementById(`${side}_${idx}`).classList.add('selected'); return;
+  }
+  const jpIdx=side==='zh'?prev.idx:idx;
+  const zhIdx=side==='zh'?idx:prev.idx;
+  document.getElementById(`jp_${prev.idx}`).classList.remove('selected');
+  if (jpIdx===zhIdx) {
+    state.matchDone.add(jpIdx); state.matchScore++;
+    document.getElementById(`jp_${jpIdx}`).classList.add('matched');
+    document.getElementById(`zh_${zhIdx}`).classList.add('matched');
+    const label=DATA[state.level].match.pairs[jpIdx].jp;
+    const spk=(a._jpSpeak||((x)=>x))(label);
+    speak(spk, null, 0.78);
+    fb.textContent='✓ 正解！よくできました！'; fb.className='feedback-banner correct show';
+    if (state.matchDone.size>=DATA[state.level].match.pairs.length)
+      setTimeout(()=>{spawnPetals(20);renderMatch(document.getElementById('gameArea'),DATA[state.level]);},700);
+  } else {
+    ['jp_'+jpIdx,'zh_'+zhIdx].forEach(id=>{
+      const el=document.getElementById(id); if(el){el.classList.add('wrong-flash');setTimeout(()=>el.classList.remove('wrong-flash'),400);}
+    });
+    fb.textContent='✗ もう一度試してください！'; fb.className='feedback-banner wrong show';
+  }
+  state.matchSel=null;
+}
+
+/* ============================================================
+   SCRAMBLE — speak JP word + hint
+   ============================================================ */
+function renderScramble(a, d) {
+  const items=d.scramble;
+  if (state.qIdx>=items.length) { renderResult(a,state.score,items.length); return; }
+  const item=items[state.qIdx];
+  if (!state.scrShuffled.length) {
+    state.scrShuffled=shuffleWord(item.word.split(''));
+    state.scrAnswer=new Array(item.word.length).fill(null);
+    state.scrUsed=new Set();
+  }
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">点数 <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.qIdx/items.length*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${items.length}</div>
+    </div>
+    <div class="scramble-display">
+      <div class="scramble-word-row">
+        ${sb(item.jpSpeak,'lg',0.75)}
+        <div class="scramble-jp">${item.display}</div>
+      </div>
+    </div>
+    <div class="scramble-hint">
+      💡
+      ${sb(item.hint,'sm',0.8)}
+      <span class="scramble-hint-text">ヒント：${item.hint}</span>
+    </div>
+    <div class="answer-slots" id="ansSlots">
+      ${state.scrAnswer.map((l,i)=>`
+        <div class="answer-slot${l?' filled':''}" id="slot${i}" onclick="remScr(${i})">${l||''}</div>`).join('')}
+    </div>
+    <div class="scramble-letters">
+      ${state.scrShuffled.map((l,i)=>`
+        <div class="letter-tile${state.scrUsed.has(i)?' used':''}" onclick="addScr('${l}',${i})">${l}</div>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="clearScr()">クリア</button>
+      <button class="btn primary" onclick="checkScr()">確認する ✓</button>
+    </div>`;
+}
+function addScr(l,ti){if(state.scrUsed.has(ti))return;const e=state.scrAnswer.indexOf(null);if(e===-1)return;state.scrAnswer[e]={l,ti};state.scrUsed.add(ti);renderScramble(document.getElementById('gameArea'),DATA[state.level]);}
+function remScr(si){const s=state.scrAnswer[si];if(!s)return;state.scrUsed.delete(s.ti);state.scrAnswer[si]=null;renderScramble(document.getElementById('gameArea'),DATA[state.level]);}
+function clearScr(){const item=DATA[state.level].scramble[state.qIdx];state.scrAnswer=new Array(item.word.length).fill(null);state.scrUsed=new Set();renderScramble(document.getElementById('gameArea'),DATA[state.level]);}
+function checkScr() {
+  const item=DATA[state.level].scramble[state.qIdx];
+  const ans=state.scrAnswer.map(s=>s?s.l:'').join('');
+  const fb=document.getElementById('fb');
+  const slots=document.querySelectorAll('.answer-slot');
+  if (ans===item.word) {
+    state.score++; slots.forEach(s=>s.classList.add('correct-slot'));
+    fb.textContent='✓ 正解！すばらしい！'; fb.className='feedback-banner correct show';
+    speak(item.jpSpeak,null,0.75);
+    spawnPetals(12);
+    setTimeout(()=>{state.qIdx++;state.scrShuffled=[];state.scrAnswer=[];state.scrUsed=new Set();renderScramble(document.getElementById('gameArea'),DATA[state.level]);},1400);
+  } else {
+    slots.forEach(s=>s.classList.add('wrong-slot'));
+    fb.textContent=`✗ 正解は：${item.word}`; fb.className='feedback-banner wrong show';
+    setTimeout(()=>{slots.forEach(s=>s.classList.remove('wrong-slot'));clearScr();document.getElementById('fb').className='feedback-banner';},1500);
+  }
+}
+
+/* ============================================================
+   FILL — speak full sentence + each word bank chip
+   ============================================================ */
+function renderFill(a, d) {
+  const items=d.fill;
+  if (state.qIdx>=items.length) { renderResult(a,state.score,items.length); return; }
+  const item=items[state.qIdx];
+  const sentSpeak=item.sentence.replace('___','…');
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div class="score-bar">
+      <div class="score-pill">点数 <span class="score-val">${state.score}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(state.qIdx/items.length*100).toFixed(0)}%"></div></div>
+      <div class="score-pill">${state.qIdx+1} / ${items.length}</div>
+    </div>
+    <div class="question-label">空欄に正しい言葉を入れてください</div>
+    <div class="sentence-row">
+      ${sb(sentSpeak,'lg',0.78)}
+      <div class="sentence-display">
+        ${item.sentence.replace('___',`<input class="blank-input" id="bi" type="text" placeholder="？？？" autocomplete="off"/>`)}
+      </div>
+    </div>
+    <div class="sentence-meaning">意味：${item.meaning}</div>
+    <div style="font-size:0.8rem;color:var(--muted);font-weight:700;text-align:center;margin-bottom:0.6rem;">🔊 クリックで発音確認 · クリックして入力もできます</div>
+    <div class="word-bank">
+      ${item.bank.map(w=>`
+        <div class="word-chip" onclick="fillW('${w.replace(/'/g,"\\'")}')">
+          ${sb(w,'sm',0.82)}
+          ${w}
+        </div>`).join('')}
+    </div>
+    <div class="feedback-banner" id="fb"></div>
+    <div class="btn-row"><button class="btn primary" onclick="checkFill()">確認する ✓</button></div>`;
+  document.getElementById('bi').addEventListener('keydown',e=>{if(e.key==='Enter')checkFill();});
+}
+function fillW(w){const i=document.getElementById('bi');if(i)i.value=w;}
+function checkFill() {
+  const item=DATA[state.level].fill[state.qIdx];
+  const bi=document.getElementById('bi');
+  const val=bi.value.trim();
+  const fb=document.getElementById('fb');
+  if (val===item.ans) {
+    state.score++; bi.classList.add('correct');
+    fb.textContent='✓ 正解！よくできました！'; fb.className='feedback-banner correct show';
+    const fullSent=item.sentence.replace('___',item.ans);
+    speak(fullSent,null,0.78);
+    spawnPetals(6);
+    setTimeout(()=>{state.qIdx++;renderFill(document.getElementById('gameArea'),DATA[state.level]);},1300);
+  } else {
+    bi.classList.add('wrong');
+    fb.textContent=`✗ 正解は「${item.ans}」です`; fb.className='feedback-banner wrong show';
+    setTimeout(()=>{bi.classList.remove('wrong');bi.value='';},1000);
+  }
+}
+
+/* ============================================================
+   VOCAB — speak word (JP) + reading + example sentence (JP)
+   ============================================================ */
+function renderVocab(a, d) {
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div style="font-family:'Noto Serif JP',serif;font-size:1.1rem;font-weight:900;color:var(--ink);margin-bottom:0.2rem">語彙リスト</div>
+    <div style="font-size:0.78rem;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:1.4rem">JLPT ${d.jlpt} · ${d.vocab.length} 語彙</div>
+    ${d.vocab.map(v=>{
+      const jpEx = jpOnly(v.example);
+      return `
+      <div class="vocab-card">
+        <div class="vocab-left">
+          <div class="vocab-jlpt jlpt-${v.jlpt}">JLPT ${v.jlpt.toUpperCase()}</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.1rem">
+            ${sb(v.jp,'lg',0.7)}
+            <div>
+              <div class="vocab-jp">${v.jp}</div>
+              <div class="vocab-kanji">${v.kanji}</div>
+            </div>
+          </div>
+          <div class="vocab-reading-row">
+            ${sb(v.jp,'sm',0.65)}
+            <div class="vocab-reading">${v.reading}</div>
+          </div>
+        </div>
+        <div>
+          <div class="vocab-meaning">📖 ${v.meaning}</div>
+          <div class="vocab-example-row" style="margin-top:0.4rem">
+            ${sb(jpEx,'sm',0.78)}
+            <div class="vocab-example">${v.example}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="btn-row" style="margin-top:1.5rem">
+      <button class="btn primary" onclick="selectGame('quiz',document.querySelector('.game-tab'))">問題を解く →</button>
+    </div>`;
+}
+
+/* ============================================================
+   KANA TABLE — clicking a cell speaks the kana via TTS
+   ============================================================ */
+function renderKana(a) {
+  const data=state.kanaTab==='hira'?HIRAGANA:KATAKANA;
+  a.innerHTML=`
+    ${ttsBanner()}
+    <div style="font-family:'Noto Serif JP',serif;font-size:1.1rem;font-weight:900;color:var(--ink);margin-bottom:1rem">五十音表 — クリックして発音を聴こう！</div>
+    <div class="kana-tabs">
+      <div class="kana-tab${state.kanaTab==='hira'?' active':''}" onclick="switchKana('hira')">ひらがな</div>
+      <div class="kana-tab${state.kanaTab==='kata'?' active':''}" onclick="switchKana('kata')">カタカナ</div>
+    </div>
+    <div class="kana-grid">
+      ${data.map((k,i)=>k.h.trim()?`
+        <div class="kana-cell" id="kana_${i}" onclick="speakKana('${k.h}',${i})">
+          <div class="kana-char">${k.h}</div>
+          <div class="kana-rom">${k.r}</div>
+          <div class="kana-speaker">🔊</div>
+        </div>`:`<div></div>`).join('')}
+    </div>
+    <div style="font-size:0.78rem;color:var(--muted);font-weight:700;text-align:center">各文字をクリックすると日本語の発音が聴けます（Click each character to hear its pronunciation）</div>`;
+}
+
+function speakKana(char, idx) {
+  const cell=document.getElementById('kana_'+idx);
+  if (cell) { cell.classList.add('playing'); setTimeout(()=>cell.classList.remove('playing'),600); }
+  speak(char, null, 0.65);
+}
+
+function switchKana(tab) { state.kanaTab=tab; renderKana(document.getElementById('gameArea')); }
+
+/* ============================================================
+   RESULT — Japanese encouraging phrases with speak buttons
+   ============================================================ */
+function renderResult(a, score, total) {
+  const pct=Math.round(score/total*100);
+  let kanji,title,msg;
+  if(pct===100){kanji='優';title='完璧です！';msg='素晴らしい！満点達成！おめでとうございます！';}
+  else if(pct>=80){kanji='良';title='よくできました！';msg='とても上手です！続けて練習しましょう！';}
+  else if(pct>=60){kanji='可';title='まあまあです！';msg='もう少し頑張りましょう！きっとできます！';}
+  else{kanji='勉';title='練習が必要です！';msg='諦めずに続けましょう！継続は力なり。';}
+  if(pct>=80) spawnPetals(30);
+  const phrases=['頑張ってください！','毎日練習しましょう！','上手になりましたね！','素晴らしいです！','もっと頑張って！'];
+  a.innerHTML=`
+    <div class="result-screen show">
+      <div class="result-kanji">${kanji}</div>
+      <div class="result-title">${title}</div>
+      <div class="result-score">${score} / ${total}</div>
+      <div style="font-family:'Noto Serif JP',serif;font-size:1.4rem;font-weight:900;color:${pct>=80?'var(--green)':pct>=60?'var(--gold)':'var(--red)'};">${pct}点</div>
+      <div class="result-msg" style="margin-top:0.5rem">${msg}</div>
+      <div style="font-size:0.82rem;color:var(--muted);font-weight:700;margin-bottom:0.5rem">🔊 励ましの言葉を聴いてみよう</div>
+      <div class="encourage-chips">
+        ${phrases.map(p=>`<div class="encourage-chip">${sb(p,'sm',0.82)} ${p}</div>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="resetAndRender()">もう一度 ↺</button>
+        <button class="btn primary" onclick="selectGame('vocab',document.querySelector('.game-tab'))">語彙を見る →</button>
+      </div>
+    </div>`;
+}
+function resetAndRender(){resetGame();renderGame();}
+
+/* ============================================================
+   PETALS
+   ============================================================ */
+function spawnPetals(n){
+  const c=document.getElementById('petalContainer');
+  const petals=['🌸','🌺','🌼','✿'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    el.className='petal';
+    el.textContent=petals[Math.floor(Math.random()*petals.length)];
+    el.style.cssText=`left:${Math.random()*100}%;top:-30px;animation-duration:${2+Math.random()*2.5}s;animation-delay:${Math.random()*0.6}s;font-size:${12+Math.random()*10}px`;
+    c.appendChild(el);
+    setTimeout(()=>el.remove(),4500);
+  }
+}
+
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function shuffleWord(a){const s=[...a];shuffleArr(s);if(s.join('')===a.join(''))shuffleArr(s);return s;}
+
+// Pre-load Japanese voices
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+renderGame();
+</script>
+</body>
+</html>
